@@ -1,0 +1,19 @@
+{
+  "name": "carrey database",
+  "version": "1.0.0",
+  "description": "Carrey's Ticket Database",
+  "main": "phasetwo.js",
+  "repository": "https://github.com/carreylipps/phase2",
+  "author": "CL",
+  "license": "MIT",
+  "private": false,
+  "scripts": {
+    "start": "node phase2.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "engines": {
+    "node": ">=14"
+  }
+}
