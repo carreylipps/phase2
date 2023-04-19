@@ -1,9 +1,23 @@
 const express = require('express');
-const bodyParser=require('body-parser');
+const bodyParser = require('body-parser');
+const mongoose = require('mongoose');
+
 const app = express();
 const port = 3000;
-var fs = require("fs");
-const { clear } = require('console');
+
+// Connect to MongoDB database
+mongoose.connect('mongodb://localhost/mydatabase', { useNewUrlParser: true, useUnifiedTopology: true });
+
+// Create a schema for the ticket model
+const ticketSchema = new mongoose.Schema({
+  id: Number,
+  title: String,
+  description: String,
+  status: String
+});
+
+// Create a model for the ticket schema
+const Ticket = mongoose.model('Ticket', ticketSchema);
 
 app.listen(port);
 console.log('Server started at port:' + port);
@@ -14,95 +28,99 @@ app.use(express.urlencoded({ extended: true }));
 // routes will go here
 
 app.get('/', function(req, res) {
-  const myquery = req.query;
   var outstring = 'Started and listening... ';
   res.send(outstring);
 });
 
 
-// Write to a file 
+// Write to a database 
 
 app.get('/wfile', function(req, res) {
   const myquery = req.query;
-  
-  var outstring = '';
-  for(var key in myquery) { outstring += "--" + key + ">" + myquery[key]; }
-  fs.appendFile("mydata.txt", outstring+'\n', (err) => {
-    if (err)
+
+  var ticket = new Ticket({
+    id: myquery.id,
+    title: myquery.title,
+    description: myquery.description,
+    status: myquery.status
+  });
+
+  ticket.save(function(err, ticket) {
+    if (err) {
       console.log(err);
-    else {
-      console.log("File written successfully\n");
-      console.log("Contents of file now:\n");
-      console.log(fs.readFileSync("mydata.txt", "utf8"));
+      res.send(err);
+    } else {
+      console.log("Ticket saved successfully\n");
+      console.log("Contents of database now:\n");
+      Ticket.find(function(err, tickets) {
+        if (err) {
+          console.log(err);
+          res.send(err);
+        } else {
+          console.log(tickets);
+          res.send(tickets);
+        }
+      });
     }
   });
- 
-  res.send(outstring);
-
 });
 
 
 // Show the form
 app.get('/form', function(req, res) {
   res.setHeader('Content-Type', 'text/html');
-  fs.readFile('./post.html', 'utf8', (err, contents) => {
-    if(err) {
-        console.log('Form file Read Error', err);
-        res.write("<p>Form file Read Error");
-    } else {
-        console.log('Form loaded\n');
-        res.write(contents + "<br>");
-    }
-    res.end();
-  });
+  res.sendFile(__dirname + '/post.html');
 });
 
 
-
-
-// List all tickets (which are stored in a file)
+// List all tickets (which are stored in the database)
 app.get('/rest/list', function(req, res) {
-  res.setHeader('Content-Type', 'text/html');
-  fs.readFile('./mydata.txt', 'utf8', (err, jsonString) => {
-    if(err) {
-        console.log('File Read Error', err);
-        res.write("<p>File Read Error");
+  Ticket.find(function(err, tickets) {
+    if (err) {
+      console.log(err);
+      res.send(err);
     } else {
-        console.log('Tickets loaded\n');
-        res.write(JSON.stringify(jsonString) + "<br>");
+      console.log('Tickets loaded\n');
+      res.send(tickets);
     }
-    res.end();
   });
 });
+
 
 // Search for a specific ticket (id)
 app.get('/rest/ticket/:id', function(req, res) {
-  var regexString = new RegExp('{\"id\":' + req.params.id +',.*');
-  console.log("Request for ID: " + req.params.id);
-  console.log("RegExp: " + regexString + "\n");
-
-  var allrecords = fs.readFile("./mydata.txt", 'utf8', function(err, doc) {
-    var result = doc.match(/regexString/s);
-    console.log("Result: " + result + "Done\n");
-    res.send(result);
+  Ticket.findOne({ id: req.params.id }, function(err, ticket) {
+    if (err) {
+      console.log(err);
+      res.send(err);
+    } else if (!ticket) {
+      console.log("Ticket not found");
+      res.send("Ticket not found");
+    } else {
+      console.log("Ticket found: " + ticket);
+      res.send(ticket);
+    }
   });
 });
-
 
 
 // A POST request
 app.post('/rest/maketicket', function(req, res) {
   const body = req.body;
-  // Report to console what was received (for debugging)
-  console.log(req.body);
-  var inp_string = JSON.stringify(req.body);
-  fs.appendFile("mydata.txt", inp_string +'\n', (err) => {
-    if (err)
+  var ticket = new Ticket({
+    id: body.id,
+    title: body.title,
+    description: body.description,
+    status: body.status
+  });
+
+  ticket.save(function(err, ticket) {
+    if (err) {
       console.log(err);
-    else {
-      console.log("Wrote inp_string to file");
+      res.send(err);
+    } else {
+      console.log("Ticket saved successfully\n");
+      res.send(ticket);
     }
-  // Report to the user
-  res.send(inp_string + " <p>stored to file");
   });
 });
