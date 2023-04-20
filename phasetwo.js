@@ -108,7 +108,6 @@ app.delete('/rest/ticket/:id', function(req, res) {
   const collection = client.db('clmdb').collection('ticket');
   const id = req.params.id;
   collection.deleteOne({ _id: id }, function (err, result) {
-      if (err) throw err;
       if (result.deletedCount === 0) {
         res.status(404).send('error');
       } else {
