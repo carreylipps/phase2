@@ -1,126 +1,124 @@
 const express = require('express');
-const bodyParser = require('body-parser');
-const mongoose = require('mongoose');
-
+const bodyParser=require('body-parser');
 const app = express();
 const port = 3000;
-
-// Connect to MongoDB database
-mongoose.connect('mongodb://localhost/mydatabase', { useNewUrlParser: true, useUnifiedTopology: true });
-
-// Create a schema for the ticket model
-const ticketSchema = new mongoose.Schema({
-  id: Number,
-  title: String,
-  description: String,
-  status: String
-});
-
-// Create a model for the ticket schema
-const Ticket = mongoose.model('Ticket', ticketSchema);
+var fs = require("fs");
 
 app.listen(port);
-console.log('Server started at port:' + port);
+console.log('Server started at http://localhost:' + port);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// routes will go here
+// GET All tickets
 
-app.get('/', function(req, res) {
-  var outstring = 'Started and listening... ';
-  res.send(outstring);
-});
-
-
-// Write to a database 
-
-app.get('/wfile', function(req, res) {
-  const myquery = req.query;
-
-  var ticket = new Ticket({
-    id: myquery.id,
-    title: myquery.title,
-    description: myquery.description,
-    status: myquery.status
-  });
-
-  ticket.save(function(err, ticket) {
-    if (err) {
-      console.log(err);
-      res.send(err);
-    } else {
-      console.log("Ticket saved successfully\n");
-      console.log("Contents of database now:\n");
-      Ticket.find(function(err, tickets) {
+app.get("/rest/list/", function(req, res) {
+    fs.readFile("tickets.txt", (err, data) => {
         if (err) {
-          console.log(err);
-          res.send(err);
+            if (err.code === "ENOENT") { 
+                //Error No Entry
+                //if file doesn't exist we throw an error 
+                res.status(404).send("File with Tickets does not exist!");
+            } else {
+                console.error(err);
+                res.status(500).send("Server error!");
+            }
+            return;
         } else {
-          console.log(tickets);
-          res.send(tickets);
+            console.log("GET all tickets was successful!\n");
         }
+
+        //creating javascript object - array tickets
+        const tickets = JSON.parse(data.toString('utf8'));
+        //sending response - all tickets
+        res.json(tickets);
       });
-    }
-  });
 });
 
+// GET ticket by id
 
-// Show the form
-app.get('/form', function(req, res) {
-  res.setHeader('Content-Type', 'text/html');
-  res.sendFile(__dirname + '/post.html');
-});
-
-
-// List all tickets (which are stored in the database)
-app.get('/rest/list', function(req, res) {
-  Ticket.find(function(err, tickets) {
-    if (err) {
-      console.log(err);
-      res.send(err);
-    } else {
-      console.log('Tickets loaded\n');
-      res.send(tickets);
-    }
-  });
-});
-
-
-// Search for a specific ticket (id)
 app.get('/rest/ticket/:id', function(req, res) {
-  Ticket.findOne({ id: req.params.id }, function(err, ticket) {
-    if (err) {
-      console.log(err);
-      res.send(err);
-    } else if (!ticket) {
-      console.log("Ticket not found");
-      res.send("Ticket not found");
-    } else {
-      console.log("Ticket found: " + ticket);
-      res.send(ticket);
-    }
-  });
-});
+    //JSON.parse treats id as a number thus we have to treat it as a number in input
+    const inputId = Number(req.params.id);
+    console.log("Looking for: " + inputId);
 
+    fs.readFile("tickets.txt", (err, data) => {
+        if (err) {
+            if (err.code === "ENOENT") {
+                //ENOENT = Error No Entry
+                //if file doesn't exist we throw an error 
+                res.status(404).send("File with Tickets does not exist!");
+            } else {
+                console.error(err);
+                res.status(500).send("Server error!");
+            }
+            return;
+        } else {
+            console.log("GET all tickets was successful!\n");
+        }
+
+        const tickets = JSON.parse(data.toString('utf8'));
+        //we search for ticket who's id matches the inputId
+        const ticket = tickets.find((ticket) => ticket.id === inputId);
+
+        //if ticket is not found it will be undefined
+        if (!ticket) {
+            res.status(404).send("Ticket does not exist!");
+        } else {
+            console.log("Ticket exists!")
+            //sending response - ticket
+            res.json(ticket);
+        }
+    });
+});
 
 // A POST request
-app.post('/rest/maketicket', function(req, res) {
-  const body = req.body;
-  var ticket = new Ticket({
-    id: body.id,
-    title: body.title,
-    description: body.description,
-    status: body.status
-  });
 
-  ticket.save(function(err, ticket) {
-    if (err) {
-      console.log(err);
-      res.send(err);
-    } else {
-      console.log("Ticket saved successfully\n");
-      res.send(ticket);
+app.post('/rest/ticket/', function(req, res) {
+    const newTicket = req.body;
+
+    //fields needed in the body
+    const ticketInfo = ['id', 'created_at', 'updated_at', 'type', 'subject', 'description', 'priority', 
+                        'status', 'recipient', 'submitter', 'assignee_id', 'follower_ids', 'tags'];
+    //checking how many fields are missing
+    const missingTicketInfo = ticketInfo.filter(field => !(field in newTicket));
+
+    //if more than 0 are missing then throw an error
+    if (missingTicketInfo.length > 0) {
+        return res.status(400).json({ 
+            error: `Incomplete ticket info!\n Missing fields: ${missingTicketInfo.join(', ')}`});
     }
-  });
+
+    //adding the new ticket
+    fs.readFile("tickets.txt", (err, data) => {
+        if (err) {
+            if (err.code === "ENOENT") { //Error No Entry
+                //if file doesn't exist we throw an error 
+                res.status(404).send("File with Tickets does not exist!");
+            } else {
+                console.error(err);
+                res.status(500).send("Server error!");
+            }
+            return;
+        } else {
+            console.log("GET all tickets was successful!\n");
+        }
+
+        //creating javascript object - array tickets
+        const tickets = JSON.parse(data.toString('utf8'));
+
+        //Adding the new ticket to the array
+        tickets.push(newTicket)
+
+        //Saving the ticket in the file
+        fs.writeFile("tickets.txt", JSON.stringify(tickets, null, 2), (err) => {
+            if (err) {
+            return res.status(500).json({ 
+                error: "Error writing to file!"});
+            } else {
+                console.log("Ticket added!")
+                res.status(201).json(newTicket);
+            }
+        });
+    });
 });
