@@ -110,13 +110,31 @@ app.post('/rest/maketicket', function(req, res) {
 app.delete('/rest/ticket/:id', function(req, res) {
   const collection = client.db('clmdb').collection('ticket');
   const id = req.params.id;
-  collection.deleteOne(ticket, (err, result) => {
-    if (err) {
-      console.log('MongoDB error:', err);
-      res.send('Error '+ err);
-    } else {
-      console.log("request to delete: " + req.params.id);
-      res.send(ticket + "Ticket deleted" );
+  db.collection('tickets').deleteOne({ id: id }, function(err, result) {
+      if (err) throw err;
+      if (result.deletedCount === 0) {
+        res.status(404).send('error');
+      } else {
+        console.log('Ticket with ID ${id} deleted');
+        res.send('Ticket with ID ${id} deleted');
     }
   });
 });
+
+
+//Update a ticket
+app.put('/rest/ticket/:id', function(req, res) {
+  const collection = client.db('clmbd').collection('ticket');
+  const id = req.params.id;
+  const updates = req.body;
+  MongoClient.connect(mongoURI, function(err, client) {
+    if (err) throw err;
+    const db = client.db(dbName);
+    db.collection('tickets').updateOne({ id: id }, { $set: updates }, function(err, result) {
+      if (err) throw err;
+      if (result.matchedCount === 0) {
+        res.status(404).send('error');
+      } else {
+        console.log('Ticket with ID ${id} updated');
+        res.send('Ticket with ID ${id} updated');
+      }
