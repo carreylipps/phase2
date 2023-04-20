@@ -5,7 +5,7 @@ const bodyParser=require('body-parser');
 const app = express();
 const port = 3000;
 const fs = require("fs");
-const { MongoClient } = require('mongodb');
+const  MongoClient  = require('mongodb');
 
 app.listen(port, () => {
 console.log('Server started at port:' + port);
