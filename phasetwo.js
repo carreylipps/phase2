@@ -96,11 +96,27 @@ app.post('/rest/maketicket', function(req, res) {
   collection.insertOne(ticket, (err, result) => {
     if (err) {
       console.log('MongoDB error:', err);
-      res.send('ErrorL ' + err);
+      res.send('Error ' + err);
     } else {
       console.log("Ticket inserted");
       res.send(ticket + "<p>in database");
     }
   
+  });
+});
+
+
+//A DELETE request to delete a record by ID from the database
+app.delete('/rest/ticket/:id', function(req, res) {
+  const collection = client.db('clmdb').collection('ticket');
+  const id = req.params.id;
+  collection.deleteOne(ticket, (err, result) => {
+    if (err) {
+      console.log('MongoDB error:', err);
+      res.send('Error '+ err);
+    } else {
+      console.log("request to delete: " + req.params.id);
+      res.send(ticket + "Ticket deleted" );
+    }
   });
 });
