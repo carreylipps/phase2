@@ -130,8 +130,8 @@ app.put('/rest/ticket/:id', function(req, res) {
       } else if (result.matchedCount === 0) {
           res.status(404).send('Record not found');
       } else {
-          console.log(Ticket with ID ${id} updated);
-          res.send(Ticket with ID ${id} updated);
+          console.log('Ticket with ID ${id} updated');
+          res.send('Ticket with ID ${id} updated');
       }
     });
 });
