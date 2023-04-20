@@ -4,12 +4,12 @@ const express = require('express');
 const bodyParser=require('body-parser');
 const app = express();
 const port = 3000;
-var fs = require("fs");
-const { clear } = require('console');
+const fs = require("fs");
 const { MongoClient } = require('mongodb');
 
-app.listen(port);
+app.listen(port, () => {
 console.log('Server started at port:' + port);
+});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
@@ -38,7 +38,6 @@ app.get('/', function(req, res) {
 
 // Show the form for POSTing input
 app.get('/form', function(req, res) {
-  res.setHeader('Content-Type', 'text/html');
   fs.readFile('./ticketpost.html', 'utf8', (err, contents) => {
     if(err) {
         console.log('Form file Read Error', err);
@@ -66,12 +65,10 @@ app.get('/rest/list', function(req, res) {
   });
 });
 
-// Search for a specific ticket (id)
-// The file assumed to contain records as strings, one record per line.
-// Here we use a regular expression match to find the record of interest.
+// Search for a specific ticket id
 app.get('/rest/ticket/:id', function(req, res) {
   const collection = client.db('ticketsdb').collection('tickets');
-  collection.findOne({ id: req.params.id }, (err, result) => {
+  collection.findOne({ _id: req.params.id }, (err, result) => {
   
    if (err) {
      console.log('MongoDB error:', err);
@@ -110,7 +107,7 @@ app.post('/rest/maketicket', function(req, res) {
 app.delete('/rest/ticket/:id', function(req, res) {
   const collection = client.db('clmdb').collection('ticket');
   const id = req.params.id;
-  db.collection('tickets').deleteOne({ id: id }, function(err, result) {
+  collection.deleteOne({ _id: id }, function (err, result) {
       if (err) throw err;
       if (result.deletedCount === 0) {
         res.status(404).send('error');
@@ -127,16 +124,14 @@ app.put('/rest/ticket/:id', function(req, res) {
   const collection = client.db('clmbd').collection('ticket');
   const id = req.params.id;
   const updates = req.body;
-  MongoClient.connect(mongoURI, function(err, client) {
-    if (err) throw err;
-    const db = client.db(dbName);
-    db.collection('tickets').updateOne({ id: id }, { $set: updates }, function(err, result) {
-      if (err) throw err;
-      if (result.matchedCount === 0) {
-        res.status(404).send('error');
+  collection.updateOne({ _id: ObjectId(id) }, { $set: updates }, function(err, result) {
+      if (err) {
+      res.status(500).send(err.message);
+      } else if (result.matchedCount === 0) {
+          res.status(404).send('Record not found');
       } else {
-        console.log('Ticket with ID ${id} updated');
-        res.send('Ticket with ID ${id} updated');
+          console.log(Ticket with ID ${id} updated);
+          res.send(Ticket with ID ${id} updated);
       }
     });
-  });
+});
