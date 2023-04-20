@@ -27,7 +27,7 @@ app.get('/', function(req, res) {
 // Show the form for POSTing input
 app.get('/form', function(req, res) {
   res.setHeader('Content-Type', 'text/html');
-  fs.readFile('./post.html', 'utf8', (err, contents) => {
+  fs.readFile('./ticketpost.html', 'utf8', (err, contents) => {
     if(err) {
         console.log('Form file Read Error', err);
         res.write("<p>Form file Read Error");
