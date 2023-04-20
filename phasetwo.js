@@ -138,3 +138,5 @@ app.put('/rest/ticket/:id', function(req, res) {
         console.log('Ticket with ID ${id} updated');
         res.send('Ticket with ID ${id} updated');
       }
+    });
+  });
