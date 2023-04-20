@@ -43,7 +43,7 @@ app.get('/form', function(req, res) {
 // List all tickets (which are stored in a file)
 app.get('/rest/list', function(req, res) {
   res.setHeader('Content-Type', 'text/html');
-  fs.readFile('./mydata_str.txt', 'utf8', (err, data) => {
+  fs.readFile('./tickets.txt', 'utf8', (err, data) => {
     if(err) {
         console.log('File Read Error', err);
         res.write("<p>File Read Error");
@@ -63,7 +63,7 @@ app.get('/rest/ticket/:id', function(req, res) {
   console.log("Request for ID: " + req.params.id);
   console.log("RegExp: " + regexString + "\n");
 
-  var allrecords = fs.readFile("./mydata_str.txt", 'utf8', function(err, doc) {
+  var allrecords = fs.readFile("./tickets.txt", 'utf8', function(err, doc) {
     var result = doc.match(regexString);
     console.log("Result: " + result + "Done\n");
     res.send(result);
@@ -78,7 +78,7 @@ app.post('/rest/maketicket', function(req, res) {
   // Report to console what was received (for debugging)
   console.log(req.body);
   var inp_string = JSON.stringify(req.body);
-  fs.appendFile("mydata_str.txt", inp_string +'\n', (err) => {
+  fs.appendFile("tickets.txt", inp_string +'\n', (err) => {
     if (err)
       console.log(err);
     else {
