@@ -16,8 +16,7 @@ app.use(express.urlencoded({ extended: true }));
 
 //connect Mongodb
 const uri = 'mongodb+srv://carrey:beauxbella@clmdb.xd8c4zo.mongodb.net/?retryWrites=true&w=majority';
-const client = new MongoClient(uri, {useNewUrlParser: true, useUnifiedTopolgy: true});
-client.connect((err) => {
+const client = new MongoClient(uri, {
   if (err) {
     console.log('MongoDB error:', err);
     process.exit(1);
