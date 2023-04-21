@@ -58,6 +58,7 @@ app.get('/rest/list', function(req, res) {
         console.log('Tickets loaded\n');
         res.send(result);
     }
+    res.end();
   });
 });
 
@@ -77,6 +78,7 @@ app.get('/rest/ticket/:id', function(req, res) {
      console.log("Ticket not here");
      res.send("Ticket not here");
    }
+    res.end();
   });
 });
 
@@ -94,7 +96,7 @@ app.post('/rest/maketicket', function(req, res) {
       console.log("Ticket inserted");
       res.send(ticket + "<p>in database");
     }
-  
+    res.end();
   });
 });
 
@@ -110,6 +112,7 @@ app.delete('/rest/ticket/:id', function(req, res) {
         console.log('Ticket with ID ${id} deleted');
         res.send('Ticket with ID ${id} deleted');
     }
+    res.end();
   });
 });
 
@@ -128,5 +131,6 @@ app.put('/rest/ticket/:id', function(req, res) {
           console.log('Ticket with ID ${id} updated');
           res.send('Ticket with ID ${id} updated');
       }
+      res.end();
     });
 });
